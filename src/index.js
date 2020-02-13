@@ -22,9 +22,10 @@ const cam = createOrthoCamera(width, height, width, height);
 let Shotting = false;
 let LENGTH = 100;
 let Angle = Math.PI / 2;
-let currentAngle = Math.PI / 20;
+let currentAngle = Math.PI / 10;
 const tmp = new Vector2(LENGTH, 0);
 const tmp2 = new Vector2(0, 0);
+const tmp3 = new Vector2(0, 0);
 const line = new Vector2(width / 2, height / 11);
 
 const inputHandler = new InputHandler(canvas);
@@ -34,8 +35,12 @@ let moveRight = false;
 document.addEventListener("keydown", e => {
   if (!Shotting && e.which === 37) {
     moveLeft = true;
-  } else if (!Shotting && e.which === 39) {
+  }
+  if (!Shotting && e.which === 39) {
     moveRight = true;
+  }
+  if (e.which === 32) {
+    Shotting = true;
   }
 });
 
@@ -59,37 +64,42 @@ const processMove = () => {
   }
 };
 
-let Speed = 20;
-let SpeedBack = 20;
+const Speed = 5;
+const SpeedBack = 3;
 let currentLength = 0;
+let status = true;
 const processState = delta => {
   if (Shotting) {
-    Speed += Speed * delta;
-    tmp.set(LENGTH + Speed, 0);
-    tmp.rotateRad(currentAngle);
+    if (status) {
+      tmp.set((LENGTH += Speed), 0);
+      tmp.rotateRad(currentAngle);
+      tmp2.setVector(line).addVector(tmp);
+    }
+    if (status && tmp2.x > 0 && tmp2.x < width && tmp2.y < height) {
+      currentLength = LENGTH;
+    } else {
+      if (currentLength > 100) {
+        tmp.set((currentLength -= SpeedBack), 0);
+        tmp.rotateRad(currentAngle);
+        tmp2.setVector(line).addVector(tmp);
+        status = false;
+      } else {
+        Shotting = false;
+        status = true;
+        LENGTH = 100;
+      }
+    }
   } else {
     currentAngle += delta * Angle;
-    if (currentAngle < Math.PI / 20 || currentAngle > (Math.PI * 19) / 20) {
+    if (currentAngle < Math.PI / 10 || currentAngle > (Math.PI * 9) / 10) {
       Angle *= -1;
     }
     tmp.set(LENGTH, 0);
-    tmp.rotateRad(currentAngle);
-  }
-  if (tmp.x > -width / 2 && tmp.x < width / 2 && tmp.y < height) {
+    // tmp.rotateRad(currentAngle);
+    tmp.rotateRad(Math.PI / 2);
     tmp2.setVector(line).addVector(tmp);
-    currentLength = LENGTH + Speed;
-  } else {
-    if (currentLength - SpeedBack >= LENGTH) {
-      SpeedBack += SpeedBack * delta;
-      tmp.set(currentLength - SpeedBack, 0);
-      tmp.rotateRad(currentAngle);
-      tmp2.setVector(line).addVector(tmp);
-    } else {
-      Speed = 20;
-      SpeedBack = 20;
-      Shotting = false;
-    }
   }
+
   batch.begin();
   drawLine(batch, whiteText, line.x, line.y, tmp2.x, tmp2.y, 10);
   batch.end();
@@ -107,8 +117,8 @@ gl.clearColor(0, 0, 0, 1);
 
 const update = delta => {
   gl.clear(gl.COLOR_BUFFER_BIT);
-  processState(delta);
   processMove();
+  processState(delta);
   draw();
 };
 
