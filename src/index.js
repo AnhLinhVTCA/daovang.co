@@ -25,27 +25,50 @@ const init = async () => {
     "./—Pngtree—anchor tattoo pattern_5062747.png"
   );
 
-  let Shotting = false;
-  let LENGTH = 100;
-  let Angle = Math.PI / 2;
-  let currentAngle = Math.PI / 10;
-  const tmp = new Vector2(LENGTH, 0);
-  const tmp2 = new Vector2(0, 0);
-  const line = new Vector2(width / 2, height / 11);
+  const rope = {
+    Shotting: false,
+    LENGTH: 100,
+    Angle: Math.PI / 2,
+    currentAngle: Math.PI / 10,
+    line: new Vector2(width / 2, height / 11),
+    tmp: new Vector2(100, 0),
+    tmp2: new Vector2(0, 0),
+    Speed: 5,
+    SpeedBack: 3,
+    currentLength: 0,
+    status: true
+  };
 
   const inputHandler = new InputHandler(canvas);
   let moveLeft = false;
   let moveRight = false;
-
+  const gold = [
+    {
+      pos: new Vector2(
+        Math.random() * (width - 50) + 50,
+        Math.random() * (height - 100 - height / 3) + height / 3
+      ),
+      speed: 1,
+      hit: false
+    },
+    {
+      pos: new Vector2(
+        Math.random() * (width - 50) + 50,
+        Math.random() * (height - 100 - height / 3) + height / 3
+      ),
+      speed: 2,
+      hit: false
+    }
+  ];
   document.addEventListener("keydown", e => {
-    if (!Shotting && e.which === 37) {
+    if (!rope.Shotting && e.which === 37) {
       moveLeft = true;
     }
-    if (!Shotting && e.which === 39) {
+    if (!rope.Shotting && e.which === 39) {
       moveRight = true;
     }
     if (e.which === 32) {
-      Shotting = true;
+      rope.Shotting = true;
     }
   });
 
@@ -58,62 +81,123 @@ const init = async () => {
   });
 
   inputHandler.addEventListener("touchStart", () => {
-    Shotting = true;
+    rope.Shotting = true;
   });
 
   const processMove = () => {
-    if (moveLeft && line.x > 25) {
-      line.x -= 10;
-    } else if (moveRight && line.x < width - 25) {
-      line.x += 10;
+    if (moveLeft && rope.line.x > 25) {
+      rope.line.x -= 10;
+    } else if (moveRight && rope.line.x < width - 25) {
+      rope.line.x += 10;
     }
   };
 
-  const Speed = 5;
-  const SpeedBack = 3;
-  let currentLength = 0;
-  let status = true;
   const processState = delta => {
-    if (Shotting) {
-      if (status) {
-        tmp.set((LENGTH += Speed), 0);
-        tmp.rotateRad(currentAngle);
-        tmp2.setVector(line).addVector(tmp);
+    if (rope.Shotting) {
+      if (rope.status) {
+        rope.tmp.set((rope.LENGTH += rope.Speed), 0);
+        rope.tmp.rotateRad(rope.currentAngle);
+        rope.tmp2.setVector(rope.line).addVector(rope.tmp);
       }
-      if (status && tmp2.x > 0 && tmp2.x < width && tmp2.y < height) {
-        currentLength = LENGTH;
+      for (let i = 0; i < gold.length; i++) {
+        const Gold = gold[i];
+        if (
+          !Gold.hit &&
+          Math.floor(
+            Math.sqrt(
+              (rope.tmp2.x - Gold.pos.x) * (rope.tmp2.x - Gold.pos.x) +
+                (rope.tmp2.y - Gold.pos.y) * (rope.tmp2.y - Gold.pos.y)
+            )
+          ) <= 75
+        ) {
+          rope.status = false;
+          Gold.hit = true;
+          rope.currentLength = rope.LENGTH;
+          break;
+        }
+      }
+
+      if (
+        rope.status &&
+        rope.tmp2.x > -50 &&
+        rope.tmp2.x < width + 50 &&
+        rope.tmp2.y < height + 50
+      ) {
+        rope.currentLength = rope.LENGTH;
       } else {
-        if (currentLength > 100) {
-          tmp.set((currentLength -= SpeedBack), 0);
-          tmp.rotateRad(currentAngle);
-          tmp2.setVector(line).addVector(tmp);
-          status = false;
+        if (rope.currentLength > 100) {
+          for (let i = 0; i < gold.length; i++) {
+            const Gold = gold[i];
+            if (Gold.hit) {
+              rope.tmp.set((rope.currentLength -= Gold.speed), 0);
+              Gold.pos.setVector(rope.tmp2);
+              break;
+            } else {
+              rope.tmp.set((rope.currentLength -= rope.SpeedBack), 0);
+            }
+          }
+          rope.tmp.rotateRad(rope.currentAngle);
+          rope.tmp2.setVector(rope.line).addVector(rope.tmp);
+          rope.status = false;
         } else {
-          Shotting = false;
-          status = true;
-          LENGTH = 100;
+          rope.Shotting = false;
+          for (let i = 0; i < gold.length; i++) {
+            const Gold = gold[i];
+            if (Gold.hit) {
+              Gold.hit = false;
+              gold.splice(i, 1);
+            }
+          }
+          rope.status = true;
+          rope.LENGTH = 100;
         }
       }
     } else {
-      currentAngle += delta * Angle;
-      if (currentAngle < Math.PI / 10 || currentAngle > (Math.PI * 9) / 10) {
-        Angle *= -1;
+      rope.currentAngle += delta * rope.Angle;
+      if (
+        rope.currentAngle < Math.PI / 10 ||
+        rope.currentAngle > (Math.PI * 9) / 10
+      ) {
+        rope.Angle *= -1;
       }
-      tmp.set(LENGTH, 0);
-      tmp.rotateRad(currentAngle);
-      tmp2.setVector(line).addVector(tmp);
+      rope.tmp.set(rope.LENGTH, 0);
+      rope.tmp.rotateRad(rope.currentAngle);
+      rope.tmp2.setVector(rope.line).addVector(rope.tmp);
     }
     batch.begin();
-    drawLine(batch, whiteText, line.x, line.y, tmp2.x, tmp2.y, 10);
-    batch.draw(texture, 50, 50, 50, 50, 50);
+    drawLine(
+      batch,
+      whiteText,
+      rope.line.x,
+      rope.line.y,
+      rope.tmp2.x,
+      rope.tmp2.y,
+      10
+    );
+    batch.draw(
+      texture,
+      rope.tmp2.x - 47,
+      rope.tmp2.y - 50,
+      100,
+      100,
+      50,
+      50,
+      -Math.atan2(rope.tmp2.x - rope.line.x, rope.tmp2.y - rope.line.y)
+    );
     batch.end();
   };
 
-  const draw = () => {
+  const drawEnvironment = () => {
     batch.setProjection(cam.combined);
     batch.begin();
     batch.draw(whiteText, 0, height / 11, width, 10);
-    batch.draw(whiteText, line.x - 25, line.y - 40, 50, 50);
+    batch.draw(whiteText, rope.line.x - 25, rope.line.y - 40, 50, 50);
+    batch.end();
+  };
+  const drawGold = pos => {
+    batch.setProjection(cam.combined);
+    batch.begin();
+    batch.draw(whiteText, pos.x - 50, pos.y, 100, 100);
     batch.end();
   };
 
@@ -123,7 +207,10 @@ const init = async () => {
     gl.clear(gl.COLOR_BUFFER_BIT);
     processMove();
     processState(delta);
-    draw();
+    drawEnvironment();
+    for (const Gold of gold) {
+      drawGold(Gold.pos);
+    }
   };
 
   const game = createGameLoop(update);
