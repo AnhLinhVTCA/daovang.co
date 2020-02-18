@@ -34,7 +34,7 @@ const init = async () => {
     tmp: new Vector2(100, 0),
     tmp2: new Vector2(0, 0),
     Speed: 5,
-    SpeedBack: 3,
+    SpeedBack: 4,
     currentLength: 0,
     status: true
   };
@@ -48,7 +48,7 @@ const init = async () => {
         Math.random() * (width - 50) + 50,
         Math.random() * (height - 100 - height / 3) + height / 3
       ),
-      speed: 1,
+      speed: 5,
       hit: false
     },
     {
@@ -56,7 +56,7 @@ const init = async () => {
         Math.random() * (width - 50) + 50,
         Math.random() * (height - 100 - height / 3) + height / 3
       ),
-      speed: 2,
+      speed: 5,
       hit: false
     }
   ];
@@ -126,28 +126,33 @@ const init = async () => {
         rope.currentLength = rope.LENGTH;
       } else {
         if (rope.currentLength > 100) {
-          for (let i = 0; i < gold.length; i++) {
-            const Gold = gold[i];
-            if (Gold.hit) {
-              rope.tmp.set((rope.currentLength -= Gold.speed), 0);
-              Gold.pos.setVector(rope.tmp2);
+          if (gold.length > 0) {
+            for (let i = 0; i < gold.length; i++) {
+              const Gold = gold[i];
+              if (Gold.hit) {
+                rope.tmp.set((rope.currentLength -= Gold.speed), 0);
+                Gold.pos.setVector(rope.tmp2);
+              } else {
+                rope.tmp.set((rope.currentLength -= rope.SpeedBack), 0);
+              }
               break;
-            } else {
-              rope.tmp.set((rope.currentLength -= rope.SpeedBack), 0);
             }
+          } else {
+            rope.tmp.set((rope.currentLength -= rope.SpeedBack), 0);
           }
           rope.tmp.rotateRad(rope.currentAngle);
           rope.tmp2.setVector(rope.line).addVector(rope.tmp);
           rope.status = false;
         } else {
-          rope.Shotting = false;
           for (let i = 0; i < gold.length; i++) {
             const Gold = gold[i];
             if (Gold.hit) {
               Gold.hit = false;
               gold.splice(i, 1);
+              break;
             }
           }
+          rope.Shotting = false;
           rope.status = true;
           rope.LENGTH = 100;
         }
