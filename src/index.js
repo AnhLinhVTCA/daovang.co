@@ -20,21 +20,24 @@ const init = async () => {
   const batch = createBatch(gl);
   const whiteText = createWhiteTexture(gl);
   const cam = createOrthoCamera(width, height, width, height);
-  const texture = await loadTexture(
-    gl,
-    "./—Pngtree—anchor tattoo pattern_5062747.png"
-  );
-
+  const image = {
+    texture: await loadTexture(
+      gl,
+      "./—Pngtree—anchor tattoo pattern_5062747.png"
+    ),
+    imageWidth: width / 7.5,
+    imageHeight: height / 13.34
+  };
   const rope = {
     Shotting: false,
-    LENGTH: 100,
+    LENGTH: width / 7.5,
     Angle: Math.PI / 2,
-    currentAngle: Math.PI / 10,
+    currentAngle: Math.PI / 4,
     line: new Vector2(width / 2, height / 11),
     tmp: new Vector2(100, 0),
     tmp2: new Vector2(0, 0),
-    Speed: 5,
-    SpeedBack: 4,
+    Speed: width / 140,
+    SpeedBack: width / 160,
     currentLength: 0,
     status: true
   };
@@ -45,18 +48,22 @@ const init = async () => {
   const gold = [
     {
       pos: new Vector2(
-        Math.random() * (width - 50) + 50,
+        Math.random() * (width - width / 7) + width / 7,
         Math.random() * (height - 100 - height / 3) + height / 3
       ),
-      speed: 5,
+      goldWidth: width / 7,
+      goldHeight: height / 14,
+      speed: width / 140,
       hit: false
     },
     {
       pos: new Vector2(
-        Math.random() * (width - 50) + 50,
+        Math.random() * (width - width / 7) + width / 7,
         Math.random() * (height - 100 - height / 3) + height / 3
       ),
-      speed: 5,
+      goldWidth: width / 7,
+      goldHeight: height / 14,
+      speed: width / 140,
       hit: false
     }
   ];
@@ -108,7 +115,8 @@ const init = async () => {
               (rope.tmp2.x - Gold.pos.x) * (rope.tmp2.x - Gold.pos.x) +
                 (rope.tmp2.y - Gold.pos.y) * (rope.tmp2.y - Gold.pos.y)
             )
-          ) <= 75
+          ) <=
+            image.imageHeight / 2 + Gold.goldHeight / 2
         ) {
           rope.status = false;
           Gold.hit = true;
@@ -116,12 +124,11 @@ const init = async () => {
           break;
         }
       }
-
       if (
         rope.status &&
-        rope.tmp2.x > -50 &&
-        rope.tmp2.x < width + 50 &&
-        rope.tmp2.y < height + 50
+        rope.tmp2.x > -image.imageWidth &&
+        rope.tmp2.x < width + image.imageWidth &&
+        rope.tmp2.y < height + image.imageHeight
       ) {
         rope.currentLength = rope.LENGTH;
       } else {
@@ -154,14 +161,14 @@ const init = async () => {
           }
           rope.Shotting = false;
           rope.status = true;
-          rope.LENGTH = 100;
+          rope.LENGTH = width / 7.5;
         }
       }
     } else {
       rope.currentAngle += delta * rope.Angle;
       if (
-        rope.currentAngle < Math.PI / 10 ||
-        rope.currentAngle > (Math.PI * 9) / 10
+        rope.currentAngle <= Math.PI / 10 ||
+        rope.currentAngle >= (Math.PI * 9) / 10
       ) {
         rope.Angle *= -1;
       }
@@ -177,16 +184,16 @@ const init = async () => {
       rope.line.y,
       rope.tmp2.x,
       rope.tmp2.y,
-      10
+      width / 75
     );
     batch.draw(
-      texture,
-      rope.tmp2.x - 47,
-      rope.tmp2.y - 50,
-      100,
-      100,
-      50,
-      50,
+      image.texture,
+      rope.tmp2.x - width / 15.98,
+      rope.tmp2.y - height / 26.68,
+      image.imageWidth,
+      image.imageHeight,
+      image.imageWidth / 2,
+      image.imageHeight / 2,
       -Math.atan2(rope.tmp2.x - rope.line.x, rope.tmp2.y - rope.line.y)
     );
     batch.end();
@@ -195,18 +202,30 @@ const init = async () => {
   const drawEnvironment = () => {
     batch.setProjection(cam.combined);
     batch.begin();
-    batch.draw(whiteText, 0, height / 11, width, 10);
-    batch.draw(whiteText, rope.line.x - 25, rope.line.y - 40, 50, 50);
+    batch.draw(whiteText, 0, height / 11, width, height / 100);
+    batch.draw(
+      whiteText,
+      rope.line.x - width / 30,
+      rope.line.y - height / 30,
+      width / 15,
+      height / 30
+    );
     batch.end();
   };
   const drawGold = pos => {
     batch.setProjection(cam.combined);
     batch.begin();
-    batch.draw(whiteText, pos.x - 50, pos.y, 100, 100);
+    batch.draw(
+      whiteText,
+      pos.x - gold[0].goldWidth / 2,
+      pos.y,
+      gold[0].goldWidth,
+      gold[0].goldHeight
+    );
     batch.end();
   };
 
-  gl.clearColor(0, 0, 0, 1);
+  gl.clearColor(1, 0, 0, 1);
 
   const update = delta => {
     gl.clear(gl.COLOR_BUFFER_BIT);
