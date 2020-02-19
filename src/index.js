@@ -31,7 +31,7 @@ const init = async () => {
   const rope = {
     Shotting: false,
     LENGTH: width / 7.5,
-    Angle: Math.PI / 2,
+    Angle: Math.PI / 3,
     currentAngle: Math.PI / 4,
     line: new Vector2(width / 2, height / 11),
     tmp: new Vector2(100, 0),
@@ -45,28 +45,22 @@ const init = async () => {
   const inputHandler = new InputHandler(canvas);
   let moveLeft = false;
   let moveRight = false;
-  const gold = [
-    {
+
+  const gold = [];
+  for (let i = 0; i < 3; i++) {
+    gold.push({
       pos: new Vector2(
         Math.random() * (width - width / 7) + width / 7,
         Math.random() * (height - 100 - height / 3) + height / 3
       ),
       goldWidth: width / 7,
       goldHeight: height / 14,
-      speed: width / 140,
+      speed: 1,
+      score: Math.round(Math.random() * 4 + 1),
       hit: false
-    },
-    {
-      pos: new Vector2(
-        Math.random() * (width - width / 7) + width / 7,
-        Math.random() * (height - 100 - height / 3) + height / 3
-      ),
-      goldWidth: width / 7,
-      goldHeight: height / 14,
-      speed: width / 140,
-      hit: false
-    }
-  ];
+    });
+  }
+
   document.addEventListener("keydown", e => {
     if (!rope.Shotting && e.which === 37) {
       moveLeft = true;
@@ -98,7 +92,7 @@ const init = async () => {
       rope.line.x += 10;
     }
   };
-
+  let score = 0;
   const processState = delta => {
     if (rope.Shotting) {
       if (rope.status) {
@@ -139,10 +133,10 @@ const init = async () => {
               if (Gold.hit) {
                 rope.tmp.set((rope.currentLength -= Gold.speed), 0);
                 Gold.pos.setVector(rope.tmp2);
+                break;
               } else {
                 rope.tmp.set((rope.currentLength -= rope.SpeedBack), 0);
               }
-              break;
             }
           } else {
             rope.tmp.set((rope.currentLength -= rope.SpeedBack), 0);
@@ -154,6 +148,7 @@ const init = async () => {
           for (let i = 0; i < gold.length; i++) {
             const Gold = gold[i];
             if (Gold.hit) {
+              score += Gold.score;
               Gold.hit = false;
               gold.splice(i, 1);
               break;
@@ -166,10 +161,11 @@ const init = async () => {
       }
     } else {
       rope.currentAngle += delta * rope.Angle;
-      if (
-        rope.currentAngle <= Math.PI / 10 ||
-        rope.currentAngle >= (Math.PI * 9) / 10
-      ) {
+      if (rope.currentAngle >= (Math.PI * 9) / 10) {
+        rope.currentAngle = (Math.PI * 9) / 10;
+        rope.Angle *= -1;
+      } else if (rope.currentAngle <= Math.PI / 10) {
+        rope.currentAngle = Math.PI / 10;
         rope.Angle *= -1;
       }
       rope.tmp.set(rope.LENGTH, 0);
@@ -212,20 +208,20 @@ const init = async () => {
     );
     batch.end();
   };
-  const drawGold = pos => {
+  const drawGold = gold => {
     batch.setProjection(cam.combined);
     batch.begin();
     batch.draw(
       whiteText,
-      pos.x - gold[0].goldWidth / 2,
-      pos.y,
-      gold[0].goldWidth,
-      gold[0].goldHeight
+      gold.pos.x - gold.goldWidth / 2,
+      gold.pos.y,
+      gold.goldWidth,
+      gold.goldHeight
     );
     batch.end();
   };
 
-  gl.clearColor(1, 0, 0, 1);
+  gl.clearColor(0, 0, 0, 1);
 
   const update = delta => {
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -233,15 +229,15 @@ const init = async () => {
     processState(delta);
     drawEnvironment();
     for (const Gold of gold) {
-      drawGold(Gold.pos);
+      drawGold(Gold);
     }
   };
 
   const game = createGameLoop(update);
 
   setInterval(() => {
-    info.innerHTML = `FPS : ${Math.floor(game.getFps())}`;
-  }, 1000);
+    info.innerHTML = `FPS : ${Math.floor(game.getFps())} - Score : ${score}`;
+  }, 500);
 };
 
 init();
