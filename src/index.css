@@ -31,9 +31,16 @@ code {
   background: black;
 }
 
-#info {
+#score {
   position: absolute;
   left: 1em;
+  top: 1em;
+  color: white;
+}
+
+#time {
+  position: absolute;
+  right: 1em;
   top: 1em;
   color: white;
 }

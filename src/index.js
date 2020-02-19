@@ -12,7 +12,8 @@ import {
 import createWhiteTexture from "gl-white-texture";
 
 const init = async () => {
-  const info = document.getElementById("info");
+  const info = document.getElementById("score");
+  const time = document.getElementById("time");
   const canvas = document.getElementById("main");
 
   const [width, height] = resizeCanvas(canvas);
@@ -39,6 +40,7 @@ const init = async () => {
     Speed: width / 140,
     SpeedBack: width / 160,
     currentLength: 0,
+    hit: false,
     status: true
   };
 
@@ -55,9 +57,8 @@ const init = async () => {
       ),
       goldWidth: width / 7,
       goldHeight: height / 14,
-      speed: 1,
-      score: Math.round(Math.random() * 4 + 1),
-      hit: false
+      speed: 5,
+      score: Math.round(Math.random() * 4 + 1)
     });
   }
 
@@ -93,6 +94,8 @@ const init = async () => {
     }
   };
   let score = 0;
+  let index = 0;
+  let countDown = 30;
   const processState = delta => {
     if (rope.Shotting) {
       if (rope.status) {
@@ -103,7 +106,7 @@ const init = async () => {
       for (let i = 0; i < gold.length; i++) {
         const Gold = gold[i];
         if (
-          !Gold.hit &&
+          !rope.hit &&
           Math.floor(
             Math.sqrt(
               (rope.tmp2.x - Gold.pos.x) * (rope.tmp2.x - Gold.pos.x) +
@@ -113,7 +116,8 @@ const init = async () => {
             image.imageHeight / 2 + Gold.goldHeight / 2
         ) {
           rope.status = false;
-          Gold.hit = true;
+          index = i;
+          rope.hit = true;
           rope.currentLength = rope.LENGTH;
           break;
         }
@@ -128,15 +132,11 @@ const init = async () => {
       } else {
         if (rope.currentLength > 100) {
           if (gold.length > 0) {
-            for (let i = 0; i < gold.length; i++) {
-              const Gold = gold[i];
-              if (Gold.hit) {
-                rope.tmp.set((rope.currentLength -= Gold.speed), 0);
-                Gold.pos.setVector(rope.tmp2);
-                break;
-              } else {
-                rope.tmp.set((rope.currentLength -= rope.SpeedBack), 0);
-              }
+            if (rope.hit) {
+              rope.tmp.set((rope.currentLength -= gold[index].speed), 0);
+              gold[index].pos.setVector(rope.tmp2);
+            } else {
+              rope.tmp.set((rope.currentLength -= rope.SpeedBack), 0);
             }
           } else {
             rope.tmp.set((rope.currentLength -= rope.SpeedBack), 0);
@@ -145,15 +145,12 @@ const init = async () => {
           rope.tmp2.setVector(rope.line).addVector(rope.tmp);
           rope.status = false;
         } else {
-          for (let i = 0; i < gold.length; i++) {
-            const Gold = gold[i];
-            if (Gold.hit) {
-              score += Gold.score;
-              Gold.hit = false;
-              gold.splice(i, 1);
-              break;
-            }
+          if (rope.hit) {
+            score += gold[index].score;
+            rope.hit = false;
+            gold.splice(index, 1);
           }
+
           rope.Shotting = false;
           rope.status = true;
           rope.LENGTH = width / 7.5;
@@ -222,22 +219,29 @@ const init = async () => {
   };
 
   gl.clearColor(0, 0, 0, 1);
-
   const update = delta => {
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    processMove();
-    processState(delta);
-    drawEnvironment();
-    for (const Gold of gold) {
-      drawGold(Gold);
+    if (countDown > 0 && gold.length > 0) {
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      processMove();
+      processState(delta);
+      drawEnvironment();
+      for (const Gold of gold) {
+        drawGold(Gold);
+      }
     }
   };
 
-  const game = createGameLoop(update);
+  createGameLoop(update);
 
   setInterval(() => {
-    info.innerHTML = `FPS : ${Math.floor(game.getFps())} - Score : ${score}`;
-  }, 500);
+    info.innerHTML = `Score : ${score}`;
+  }, 100);
+
+  setInterval(() => {
+    time.innerHTML = `Time : ${
+      countDown && countDown > 0 ? (countDown -= 1) : 0
+    }`;
+  }, 1000);
 };
 
 init();
