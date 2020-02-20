@@ -31,16 +31,37 @@ code {
   background: black;
 }
 
-#score {
+#score,
+#time {
   position: absolute;
+  color: white;
+}
+#score {
   left: 1em;
   top: 1em;
-  color: white;
 }
 
 #time {
-  position: absolute;
   right: 1em;
   top: 1em;
-  color: white;
+}
+
+#notif,
+#restart {
+  display: none;
+  position: absolute;
+  font-weight: bold;
+  color: red;
+}
+
+#notif {
+  font-size: 48px;
+  top: 3em;
+}
+
+#restart {
+  font-size: 36px;
+  left: 6em;
+  top: 9em;
+  cursor: pointer;
 }
