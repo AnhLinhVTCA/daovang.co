@@ -1,6 +1,5 @@
 import { drawLine } from "gdxjs/lib";
 let index = 0;
-const info = document.getElementById("score");
 export default (
   delta,
   batch,
@@ -10,7 +9,7 @@ export default (
   width,
   height,
   img,
-  score
+  setScore
 ) => {
   if (rope.Shotting) {
     if (rope.status) {
@@ -61,11 +60,10 @@ export default (
         rope.status = false;
       } else {
         if (rope.hit) {
-          score += golds[index].score;
+          setScore(golds[index].score);
           rope.hit = false;
           golds.splice(index, 1);
         }
-
         rope.Shotting = false;
         rope.status = true;
         rope.LENGTH = width / 7.5;
@@ -105,5 +103,4 @@ export default (
     -Math.atan2(rope.tmp2.x - rope.line.x, rope.tmp2.y - rope.line.y)
   );
   batch.end();
-  info.innerHTML = `Score : ${score}`;
 };

@@ -6,7 +6,7 @@ let moveLeft = false;
 let moveRight = false;
 let countDown = 30;
 
-export default (rope, golds, width, height, canvas, score) => {
+export default (rope, golds, width, height, canvas, setScore) => {
   const inputHandler = new InputHandler(canvas);
 
   restart.addEventListener("click", () => {
@@ -17,7 +17,7 @@ export default (rope, golds, width, height, canvas, score) => {
     rope.tmp.set(rope.LENGTH, 0);
     rope.Shotting = false;
     rope.hit = false;
-    score = 0;
+    setScore(0);
     countDown = 30;
     golds.length = 0;
     for (let i = 0; i < 3; i++) {
@@ -70,7 +70,6 @@ export default (rope, golds, width, height, canvas, score) => {
   return {
     getMoveLeft: () => moveLeft,
     getMoveRight: () => moveRight,
-    getCountDown: () => countDown,
-    getScore: () => score
+    getCountDown: () => countDown
   };
 };

@@ -20,6 +20,8 @@ import {
 const init = async () => {
   const canvas = document.getElementById("main");
   const notif = document.getElementById("notif");
+  const info = document.getElementById("score");
+
   const restart = document.getElementById("restart");
   const [width, height] = resizeCanvas(canvas);
   const gl = canvas.getContext("webgl");
@@ -30,7 +32,14 @@ const init = async () => {
   const rope = createRope(width, height);
   const golds = createGolds(width, height);
   let score = 0;
-  const event = eventHandler(rope, golds, width, height, canvas, score);
+  const setScore = score1 => {
+    if (score1 !== 0) {
+      score += score1;
+    } else {
+      score = score1;
+    }
+  };
+  const event = eventHandler(rope, golds, width, height, canvas, setScore);
   gl.clearColor(0, 0, 0, 1);
   const update = delta => {
     if (event.getCountDown() > 0 && golds.length > 0) {
@@ -51,7 +60,7 @@ const init = async () => {
         width,
         height,
         img,
-        score
+        setScore
       );
       drawEnviroment(batch, whiteText, cam, rope, width, height);
       for (const gold of golds) {
@@ -70,6 +79,7 @@ const init = async () => {
       notif.style.display = "block";
       restart.style.display = "block";
     }
+    info.innerHTML = `Score : ${score}`;
   };
 
   createGameLoop(update);
